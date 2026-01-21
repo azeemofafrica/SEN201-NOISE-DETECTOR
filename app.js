@@ -26,10 +26,16 @@ function toggleDetection() {
 async function startDetection() {
     isBeeping = false;
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         analyser = audioContext.createAnalyser();
+
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         source = audioContext.createMediaStreamSource(stream);
+        
         source.connect(analyser);
 
         analyser.fftSize = 512;
@@ -43,9 +49,10 @@ async function startDetection() {
         detectionScene.classList.add('detecting');
 
         detectNoise(dataArray, bufferLength);
+
     } catch (err) {
-        console.error('Error accessing microphone:', err);
-        statusText.textContent = 'Error: Could not access microphone.';
+        console.error('Failed to start detection:', err);
+        statusText.textContent = 'Error: Mic access denied or failed.';
     }
 }
 
@@ -74,14 +81,12 @@ function detectNoise(dataArray, bufferLength) {
         sum += dataArray[i];
     }
     let average = sum / bufferLength;
-
-    if (average > NOISE_THRESHOLD) {
+    console.log('Average Frequency:', average);
+    if (average > NOISE_THRESHOLD && !isBeeping) {
+        console.log('NOISE DETECTED!');
         statusText.textContent = 'Noise Detected!';
         detectionScene.classList.add('noise-detected');
-        startBeep();
-    } else {
-        statusText.textContent = 'Detecting...';
-        detectionScene.classList.remove('noise-detected');
+        startBeep(); 
     }
 
     if (isDetecting) {
@@ -110,7 +115,6 @@ function stopBeep() {
     }
 }
 
-
 const bgCanvas = document.getElementById('background-canvas');
 const bgCtx = bgCanvas.getContext('2d');
 bgCanvas.width = window.innerWidth;
@@ -134,18 +138,13 @@ class Particle {
         bgCtx.fill();
     }
     update() {
-        if (this.x > bgCanvas.width || this.x < 0) {
-            this.directionX = -this.directionX;
-        }
-        if (this.y > bgCanvas.height || this.y < 0) {
-            this.directionY = -this.directionY;
-        }
+        if (this.x > bgCanvas.width || this.x < 0) { this.directionX = -this.directionX; }
+        if (this.y > bgCanvas.height || this.y < 0) { this.directionY = -this.directionY; }
         this.x += this.directionX;
         this.y += this.directionY;
         this.draw();
     }
 }
-
 
 function initParticles() {
     particlesArray = [];
@@ -156,47 +155,13 @@ function initParticles() {
         let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
         let directionX = (Math.random() * 0.4) - 0.2;
         let directionY = (Math.random() * 0.4) - 0.2;
-        let color = '#8C9BAB';
-        particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+        particlesArray.push(new Particle(x, y, directionX, directionY, size, ''));
     }
 }
-
 
 function connectParticles() {
     let opacityValue = 1;
     for (let a = 0; a < particlesArray.length; a++) {
         for (let b = a; b < particlesArray.length; b++) {
-            let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) +
-                ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
-            if (distance < (bgCanvas.width / 7) * (bgCanvas.height / 7)) {
-                opacityValue = 1 - (distance / 20000);
-                bgCtx.strokeStyle = 'rgba(140, 155, 171,' + opacityValue + ')';
-                bgCtx.lineWidth = 1;
-                bgCtx.beginPath();
-                bgCtx.moveTo(particlesArray[a].x, particlesArray[a].y);
-                bgCtx.lineTo(particlesArray[b].x, particlesArray[b].y);
-                bgCtx.stroke();
-            }
-        }
-    }
-}
-
-
-function animateParticles() {
-    requestAnimationFrame(animateParticles);
-    bgCtx.clearRect(0, 0, innerWidth, innerHeight);
-    for (let i = 0; i < particlesArray.length; i++) {
-        particlesArray[i].update();
-    }
-    connectParticles();
-}
-
-window.addEventListener('resize', () => {
-    bgCanvas.width = innerWidth;
-    bgCanvas.height = innerHeight;
-    initParticles();
-});
-
-initParticles();
-animateParticles();
-
+            let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+            if (distance < (bg
