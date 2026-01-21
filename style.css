@@ -1,0 +1,104 @@
+body {
+    font-family: sans-serif;
+    background-color: #0d1117; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    color: #f0f0f0;
+    overflow: hidden;
+}
+
+#background-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; 
+}
+
+.container {
+    text-align: center;  
+    position: relative;
+    z-index: 1;
+}
+
+#detection-scene {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+#beam {
+    width: 10px;
+    height: 210px;
+    background: linear-gradient(180deg, #00c6ff, #0072ff);
+    border-radius: 5px;
+    box-shadow: 0 0 15px #00c6ff, 0 0 25px #0072ff;
+}
+
+#orbit-path {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    animation: orbit 10s linear infinite;
+    animation-play-state: paused;
+}
+
+#ball {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 30px;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+    box-shadow: 0 0 10px white;
+    animation: spin 0.5s linear infinite;
+    animation-play-state: paused;
+    transition: background-color 0.5s, box-shadow 0.5s; /* Smooth color change */
+}
+
+.detecting #orbit-path {
+    animation-play-state: running;
+}
+
+.noise-detected #ball {
+    animation-play-state: running;
+    background-color: #ff4747;
+    box-shadow: 0 0 25px #ff4747;
+}
+
+@keyframes orbit {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transition: ease 0.5;
+    transform:scaleX(1);
+}
